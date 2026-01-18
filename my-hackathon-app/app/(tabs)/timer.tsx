@@ -1,6 +1,8 @@
 import { DeviceMotion } from 'expo-sensors';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +19,7 @@ const STATIONARY_DURATION_MS = 1200;
 const MOTION_END_THRESHOLD = 0.7;
 
 export default function TimerScreen() {
+  const router = useRouter();
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [isPhoneDown, setIsPhoneDown] = useState(false);
   const [status, setStatus] = useState('Tap start to arm the timer.');
@@ -85,7 +88,8 @@ export default function TimerScreen() {
     setStatus('Session complete! Tap start to run it again.');
     setRemainingMs(0);
     stationaryStartRef.current = null;
-  }, [sessionTargetMs]);
+    router.push('/earn');
+  }, [router, sessionTargetMs]);
 
   useEffect(() => {
     let subscription: ReturnType<typeof DeviceMotion.addListener> | null = null;
@@ -169,6 +173,9 @@ export default function TimerScreen() {
           <View style={styles.cloudOne} />
           <View style={styles.cloudTwo} />
           <View style={styles.sunBubble} />
+          <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/(tabs)')}>
+            <Ionicons name="home" size={18} color="#6E4B1F" />
+          </TouchableOpacity>
           <View style={styles.headerBadge}>
             <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
               Focus Mode
@@ -353,6 +360,19 @@ const styles = StyleSheet.create({
     borderRadius: 70,
     backgroundColor: '#FFC95C',
     opacity: 0.7,
+  },
+  homeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF2B3',
+    borderWidth: 2,
+    borderColor: '#E7B75D',
   },
   headerBadge: {
     alignSelf: 'flex-start',

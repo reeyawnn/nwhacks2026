@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const EARN_OPTIONS = [
   { id: 'upper', label: 'Upper body', detail: 'Push-ups, curls, presses' },
@@ -12,6 +13,7 @@ const EARN_OPTIONS = [
 ];
 
 export default function EarnScreen() {
+  const router = useRouter();
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
@@ -19,6 +21,9 @@ export default function EarnScreen() {
         <View style={styles.header}>
           <View style={styles.ribbon} />
           <View style={styles.sparkle} />
+          <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/(tabs)')}>
+            <Ionicons name="home" size={18} color="#35543F" />
+          </TouchableOpacity>
           <ThemedText style={styles.headerTitle} lightColor="#1C3A2A" darkColor="#1C3A2A">
             Choose your move
           </ThemedText>
@@ -101,6 +106,19 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     backgroundColor: '#DDF6E0',
     opacity: 0.8,
+  },
+  homeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DDF6E0',
+    borderWidth: 2,
+    borderColor: '#7FC08D',
   },
   headerTitle: {
     fontSize: 30,
