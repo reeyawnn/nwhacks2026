@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 30,
     lineHeight: 34,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   headerSubtitle: {
     marginTop: 8,
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   },
   exerciseTitle: {
     fontSize: 20,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
     marginBottom: 6,
   },
   exerciseSubtitle: {
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 16,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   exerciseDetail: {
     fontSize: 12,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   stepperText: {
     fontSize: 18,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   stepperValue: {
     minWidth: 36,
@@ -255,6 +255,6 @@ const styles = StyleSheet.create({
   },
   stepperValueText: {
     fontSize: 14,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
 });

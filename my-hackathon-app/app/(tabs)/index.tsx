@@ -179,12 +179,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   headerTime: {
     fontSize: 38,
     lineHeight: 42,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   headerSubtitle: {
     marginTop: 8,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 20,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   actionSubtitle: {
     fontSize: 13,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   workButtonText: {
     fontSize: 15,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   earnCard: {
     padding: 20,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   earnTitle: {
     fontSize: 20,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   earnSubtitle: {
     fontSize: 13,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   earnButtonText: {
     fontSize: 15,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   logCard: {
     padding: 20,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   },
   logTitle: {
     fontSize: 20,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
     marginBottom: 6,
   },
   logSubtitle: {
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   logItemLabel: {
     fontSize: 15,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   logItemTime: {
     fontSize: 12,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   logPillText: {
     fontSize: 12,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   logButton: {
     marginTop: 14,

@@ -142,12 +142,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         letterSpacing: 0.6,
         textTransform: 'uppercase',
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
     },
     headerTitle: {
         fontSize: 32,
         lineHeight: 36,
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
         marginBottom: 8,
     },
     headerSubtitle: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     },
     mainTitle: {
         fontSize: 26,
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
         textAlign: 'center',
     },
     list: {
@@ -187,6 +187,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         marginLeft: 12,
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
     },
 });

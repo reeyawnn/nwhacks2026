@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 30,
     lineHeight: 34,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   headerSubtitle: {
     marginTop: 8,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   optionsTitle: {
     fontSize: 20,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
     marginBottom: 6,
   },
   optionsSubtitle: {
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 16,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   optionDetail: {
     fontSize: 12,
@@ -182,6 +182,6 @@ const styles = StyleSheet.create({
   },
   optionTagText: {
     fontSize: 12,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
 });
