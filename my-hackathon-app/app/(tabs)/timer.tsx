@@ -1,4 +1,5 @@
 import { DeviceMotion } from 'expo-sensors';
+import * as Haptics from 'expo-haptics';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -32,6 +33,8 @@ export default function TimerScreen() {
   const stationaryStartRef = useRef<number | null>(null);
   const timerStartRef = useRef<number | null>(null);
   const consumedMsRef = useRef(0);
+  const hasSessionStartedRef = useRef(false);
+  const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const formattedTime = formatDuration(remainingMs);
   const isDurationZero = sessionTargetMs === 0;
@@ -49,6 +52,7 @@ export default function TimerScreen() {
     setStatus('Set the phone down to start the countdown.');
     stationaryStartRef.current = null;
     timerStartRef.current = null;
+    hasSessionStartedRef.current = false;
   }, [isDurationZero, sessionTargetMs]);
 
   const cancelMonitoring = useCallback(() => {
@@ -63,6 +67,7 @@ export default function TimerScreen() {
       setRemainingMs(Math.max(sessionTargetMs - consumedMsRef.current, 0));
     }
     stationaryStartRef.current = null;
+    hasSessionStartedRef.current = false;
   }, [sessionTargetMs]);
 
   const pauseTimer = useCallback(() => {
@@ -75,6 +80,8 @@ export default function TimerScreen() {
     }
     setIsPhoneDown(false);
     setStatus('Phone picked up — timer paused. Set it down to resume.');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
     stationaryStartRef.current = null;
   }, [sessionTargetMs]);
 
@@ -88,6 +95,7 @@ export default function TimerScreen() {
     setStatus('Session complete! Tap start to run it again.');
     setRemainingMs(0);
     stationaryStartRef.current = null;
+    hasSessionStartedRef.current = false;
     router.push('/earn');
   }, [router, sessionTargetMs]);
 
@@ -118,6 +126,7 @@ export default function TimerScreen() {
               });
               setIsPhoneDown(true);
               setStatus('Countdown running… keep the phone down.');
+              hasSessionStartedRef.current = true;
             }
           } else if (stationaryStartRef.current) {
             stationaryStartRef.current = null;
@@ -156,6 +165,29 @@ export default function TimerScreen() {
       consumedMsRef.current = 0;
     }
   }, [isMonitoring, sessionTargetMs]);
+
+  useEffect(() => {
+    if (hapticIntervalRef.current) {
+      clearInterval(hapticIntervalRef.current);
+      hapticIntervalRef.current = null;
+    }
+
+    if (isMonitoring && !isPhoneDown && hasSessionStartedRef.current) {
+      const triggerHaptic = () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+      };
+      triggerHaptic();
+      hapticIntervalRef.current = setInterval(triggerHaptic, 1200);
+    }
+
+    return () => {
+      if (hapticIntervalRef.current) {
+        clearInterval(hapticIntervalRef.current);
+        hapticIntervalRef.current = null;
+      }
+    };
+  }, [isMonitoring, isPhoneDown]);
 
   const primaryAction = () => {
     if (isMonitoring) {
