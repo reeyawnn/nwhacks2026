@@ -38,7 +38,9 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "react-native-fast-tflite",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
