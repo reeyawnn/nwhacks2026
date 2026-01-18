@@ -117,7 +117,15 @@ export default function TimerScreen() {
     hasSessionStartedRef.current = false;
     setShowPauseOverlay(false);
     cachedTimerState = null;
-    router.push('/earn');
+    router.push({
+      pathname: '/(tabs)/squat_tracker',
+      params: {
+        exerciseId: 'squats',
+        exerciseName: 'Focus squats',
+        targetReps: '10',
+        source: 'focus',
+      },
+    });
   }, [router, sessionTargetMs]);
 
   useEffect(() => {

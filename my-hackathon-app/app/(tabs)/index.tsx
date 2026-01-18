@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useRewardMinutes } from '@/store/reward-store';
 
 const ACTIVITY_LOG = [
   { id: '1', label: 'Jump rope', minutes: 12, time: '9:10 AM' },
@@ -15,6 +16,10 @@ const ACTIVITY_LOG = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const rewardMinutes = useRewardMinutes();
+  const hours = Math.floor(rewardMinutes / 60);
+  const minutes = rewardMinutes % 60;
+  const rewardLabel = `${hours}h ${minutes}m`;
 
   return (
     <ParallaxScrollView
@@ -35,7 +40,7 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
           <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
-            2h 20m
+            {rewardLabel}
           </ThemedText>
           <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
             Keep moving to unlock more screen time!
