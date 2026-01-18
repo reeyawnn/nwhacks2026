@@ -1,333 +1,278 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import { useState, useEffect } from 'react';
-import { DeviceMotion } from 'expo-sensors';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-export default function SquatTracker() {
-  const [isTracking, setIsTracking] = useState(false);
-  const [motion, setMotion] = useState({
-    acceleration: { x: 0, y: 0, z: 0 },
-    rotation: { alpha: 0, beta: 0, gamma: 0 }
-  });
-  
-  const [metrics, setMetrics] = useState({
-    verticalDisplacement: 0,
-    tiltAngle: 0,
-    currentAcceleration: 0
-  });
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 
-  useEffect(() => {
-    let subscription: any;
-    
-    if (isTracking) {
-      // Set update interval to 100ms (10 updates per second)
-      DeviceMotion.setUpdateInterval(100);
-      
-      subscription = DeviceMotion.addListener((data) => {
-        const { acceleration, rotation } = data;
-        
-        // Update raw motion data
-        setMotion({
-          acceleration: acceleration || { x: 0, y: 0, z: 0 },
-          rotation: rotation || { alpha: 0, beta: 0, gamma: 0 }
-        });
-        
-        // Calculate metrics
-        if (acceleration && rotation) {
-          // Vertical displacement (using Y-axis as vertical when phone is in pocket)
-          const verticalAccel = acceleration.y;
-          
-          // Tilt angle (pitch - rotation around X-axis, converted to degrees)
-          const tiltAngle = rotation.beta * (180 / Math.PI);
-          
-          // Overall acceleration magnitude
-          const accelMagnitude = Math.sqrt(
-            acceleration.x ** 2 + 
-            acceleration.y ** 2 + 
-            acceleration.z ** 2
-          );
-          
-          setMetrics({
-            verticalDisplacement: verticalAccel,
-            tiltAngle: tiltAngle,
-            currentAcceleration: accelMagnitude
-          });
-        }
-      });
-    }
-    
-    return () => {
-      if (subscription) {
-        subscription.remove();
-      }
-    };
-  }, [isTracking]);
+const ACTIVITY_LOG = [
+  { id: '1', label: 'Jump rope', minutes: 12, time: '9:10 AM' },
+  { id: '2', label: 'Push-ups', minutes: 8, time: '11:40 AM' },
+  { id: '3', label: 'Yoga flow', minutes: 20, time: '2:05 PM' },
+  { id: '4', label: 'Dance break', minutes: 10, time: '4:25 PM' },
+];
 
-  const toggleTracking = () => {
-    setIsTracking(!isTracking);
-  };
-
+export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>🏋️ Squat Tracker</Text>
-      <Text style={styles.subtitle}>Live Motion Metrics</Text>
-      
-      {/* Tracking Status */}
-      <View style={styles.statusContainer}>
-        <View style={[styles.statusDot, isTracking && styles.statusActive]} />
-        <Text style={styles.statusText}>
-          {isTracking ? 'TRACKING' : 'STOPPED'}
-        </Text>
-      </View>
-
-      {/* Main Metrics */}
-      <View style={styles.metricsContainer}>
-        
-        {/* Vertical Displacement */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Vertical Displacement</Text>
-          <Text style={styles.metricValue}>
-            {metrics.verticalDisplacement.toFixed(3)}
-          </Text>
-          <Text style={styles.metricUnit}>m/s²</Text>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { 
-                  width: `${Math.min(Math.abs(metrics.verticalDisplacement) * 10, 100)}%`,
-                  backgroundColor: metrics.verticalDisplacement < 0 ? '#4CAF50' : '#FF6B6B'
-                }
-              ]} 
-            />
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
+      headerImage={
+        <View style={styles.header}>
+          <View style={styles.cloudOne} />
+          <View style={styles.cloudTwo} />
+          <View style={styles.sunBubble} />
+          <View style={styles.headerBadge}>
+            <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              Reward Time
+            </ThemedText>
           </View>
-          <Text style={styles.hint}>
-            {metrics.verticalDisplacement < -0.5 ? '⬇️ Going down' : 
-             metrics.verticalDisplacement > 0.5 ? '⬆️ Going up' : '➖ Stable'}
-          </Text>
+          <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
+            2h 20m
+          </ThemedText>
+          <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Keep moving to unlock more screen time!
+          </ThemedText>
         </View>
+      }>
+      <ThemedView style={styles.body}>
+        <ThemedView style={styles.actionCard}>
+          <ThemedText style={styles.actionTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            Power up a focus sprint
+          </ThemedText>
+          <ThemedText style={styles.actionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Start a work session to stay on track and protect your reward time.
+          </ThemedText>
+          <Pressable style={styles.workButton}>
+            <ThemedText style={styles.workButtonText} lightColor="#1C3A2A" darkColor="#1C3A2A">
+              Start work session
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
 
-        {/* Tilt Angle */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Tilt/Pitch Angle</Text>
-          <Text style={styles.metricValue}>
-            {metrics.tiltAngle.toFixed(1)}°
-          </Text>
-          <Text style={styles.metricUnit}>degrees</Text>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { 
-                  width: `${Math.min(Math.abs(metrics.tiltAngle) / 90 * 100, 100)}%`,
-                  backgroundColor: '#FFA726'
-                }
-              ]} 
-            />
+        <ThemedView style={styles.earnCard}>
+          <View style={styles.earnHeader}>
+            <ThemedText style={styles.earnTitle} lightColor="#1F2A44" darkColor="#1F2A44">
+              Earn more time
+            </ThemedText>
+            <ThemedText style={styles.earnSubtitle} lightColor="#4B5A82" darkColor="#4B5A82">
+              Log quick exercises for instant bonus minutes.
+            </ThemedText>
           </View>
-          <Text style={styles.hint}>
-            {Math.abs(metrics.tiltAngle) > 20 ? '📐 Tilted' : '📱 Upright'}
-          </Text>
-        </View>
+          <Pressable style={styles.earnButton}>
+            <ThemedText style={styles.earnButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
+              Earn time now
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
 
-        {/* Acceleration Magnitude */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Acceleration Magnitude</Text>
-          <Text style={styles.metricValue}>
-            {metrics.currentAcceleration.toFixed(3)}
-          </Text>
-          <Text style={styles.metricUnit}>m/s²</Text>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { 
-                  width: `${Math.min(metrics.currentAcceleration * 5, 100)}%`,
-                  backgroundColor: '#42A5F5'
-                }
-              ]} 
-            />
+        <ThemedView style={styles.logCard}>
+          <ThemedText style={styles.logTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            Activity log
+          </ThemedText>
+          <ThemedText style={styles.logSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Every movement converts to screen time.
+          </ThemedText>
+          <View style={styles.logList}>
+            {ACTIVITY_LOG.map((item) => (
+              <View key={item.id} style={styles.logRow}>
+                <View>
+                  <ThemedText style={styles.logItemLabel} lightColor="#2C1C07" darkColor="#2C1C07">
+                    {item.label}
+                  </ThemedText>
+                  <ThemedText style={styles.logItemTime} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                    {item.time}
+                  </ThemedText>
+                </View>
+                <View style={styles.logPill}>
+                  <ThemedText style={styles.logPillText} lightColor="#2C1C07" darkColor="#2C1C07">
+                    +{item.minutes} min
+                  </ThemedText>
+                </View>
+              </View>
+            ))}
           </View>
-          <Text style={styles.hint}>
-            {metrics.currentAcceleration > 1.5 ? '⚡ High movement' : '🔵 Low movement'}
-          </Text>
-        </View>
-      </View>
-
-      {/* Raw Data (collapsed view) */}
-      <View style={styles.rawDataContainer}>
-        <Text style={styles.rawDataTitle}>Raw Sensor Data</Text>
-        <View style={styles.rawDataRow}>
-          <Text style={styles.rawDataLabel}>Accel X:</Text>
-          <Text style={styles.rawDataValue}>{motion.acceleration.x.toFixed(3)}</Text>
-        </View>
-        <View style={styles.rawDataRow}>
-          <Text style={styles.rawDataLabel}>Accel Y:</Text>
-          <Text style={styles.rawDataValue}>{motion.acceleration.y.toFixed(3)}</Text>
-        </View>
-        <View style={styles.rawDataRow}>
-          <Text style={styles.rawDataLabel}>Accel Z:</Text>
-          <Text style={styles.rawDataValue}>{motion.acceleration.z.toFixed(3)}</Text>
-        </View>
-      </View>
-
-      {/* Control Button */}
-      <TouchableOpacity 
-        style={[styles.button, isTracking && styles.buttonStop]}
-        onPress={toggleTracking}
-      >
-        <Text style={styles.buttonText}>
-          {isTracking ? 'STOP TRACKING' : 'START TRACKING'}
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={styles.instructions}>
-        💡 Put phone in front pocket and do squats
-      </Text>
-      </ScrollView>
-    </View>
+        </ThemedView>
+      </ThemedView>
+    </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingTop: 60,
+    paddingHorizontal: 28,
+    paddingTop: 56,
     paddingBottom: 40,
+    justifyContent: 'flex-end',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 4,
+  cloudOne: {
+    position: 'absolute',
+    top: 32,
+    left: 24,
+    width: 120,
+    height: 46,
+    borderRadius: 40,
+    backgroundColor: '#FFF7D8',
+    opacity: 0.85,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 20,
+  cloudTwo: {
+    position: 'absolute',
+    top: 22,
+    right: 30,
+    width: 90,
+    height: 38,
+    borderRadius: 40,
+    backgroundColor: '#FFF1BF',
+    opacity: 0.9,
   },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
+  sunBubble: {
+    position: 'absolute',
+    top: 40,
+    right: -20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#FFC95C',
+    opacity: 0.7,
   },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#666',
-    marginRight: 8,
-  },
-  statusActive: {
-    backgroundColor: '#4CAF50',
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
-  metricsContainer: {
-    gap: 16,
-    marginBottom: 24,
-  },
-  metricCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  metricLabel: {
-    color: '#888',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  metricValue: {
-    color: '#fff',
-    fontSize: 48,
-    fontWeight: 'bold',
-  },
-  metricUnit: {
-    color: '#666',
-    fontSize: 16,
+  headerBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#FFF2B3',
+    borderWidth: 2,
+    borderColor: '#E7B75D',
     marginBottom: 12,
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  hint: {
-    color: '#aaa',
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-  rawDataContainer: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  rawDataTitle: {
-    color: '#888',
+  headerBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 12,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
+    fontFamily: 'Georgia',
   },
-  rawDataRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  headerTime: {
+    fontSize: 38,
+    lineHeight: 42,
+    fontFamily: 'Georgia',
+  },
+  headerSubtitle: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 21,
+    maxWidth: 260,
+  },
+  body: {
+    gap: 18,
+  },
+  actionCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#FFF7E1',
+    borderWidth: 2,
+    borderColor: '#EFCB7B',
+    gap: 12,
+  },
+  actionTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
+  },
+  actionSubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  workButton: {
+    backgroundColor: '#BFE9C7',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#7FC08D',
+  },
+  workButtonText: {
+    fontSize: 15,
+    fontFamily: 'Georgia',
+  },
+  earnCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#DDE8FF',
+    borderWidth: 2,
+    borderColor: '#A8B7E8',
+    gap: 14,
+  },
+  earnHeader: {
+    gap: 6,
+  },
+  earnTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
+  },
+  earnSubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  earnButton: {
+    backgroundColor: '#FFD36E',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E8AD3F',
+  },
+  earnButtonText: {
+    fontSize: 15,
+    fontFamily: 'Georgia',
+  },
+  logCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#FFF7E1',
+    borderWidth: 2,
+    borderColor: '#EFCB7B',
+  },
+  logTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
     marginBottom: 6,
   },
-  rawDataLabel: {
-    color: '#666',
-    fontSize: 14,
+  logSubtitle: {
+    fontSize: 13,
+    marginBottom: 16,
   },
-  rawDataValue: {
-    color: '#fff',
-    fontSize: 14,
-    fontFamily: 'monospace',
+  logList: {
+    gap: 12,
   },
-  button: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 18,
-    borderRadius: 12,
+  logRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    backgroundColor: '#FFFDF4',
+    borderWidth: 2,
+    borderColor: '#F1D79E',
   },
-  buttonStop: {
-    backgroundColor: '#FF6B6B',
+  logItemLabel: {
+    fontSize: 15,
+    fontFamily: 'Georgia',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 1,
+  logItemTime: {
+    fontSize: 12,
+    marginTop: 2,
   },
-  instructions: {
-    color: '#666',
-    fontSize: 14,
-    textAlign: 'center',
-    fontStyle: 'italic',
+  logPill: {
+    backgroundColor: '#FFD36E',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#E8AD3F',
+  },
+  logPillText: {
+    fontSize: 12,
+    fontFamily: 'Georgia',
   },
 });
