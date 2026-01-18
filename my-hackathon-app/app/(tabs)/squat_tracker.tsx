@@ -9,21 +9,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { addRewardMinutes } from '@/store/reward-store';
 
-type RepPhase = 'ready' | 'down';
-
-const DOWN_DELTA_DEG = 18;
-const UP_DELTA_DEG = 8;
-const MIN_REP_MS = 600;
+const BOTTOM_THRESHOLD = -20;  // Beta angle must reach -20° or higher (closer to 0)
+const COOLDOWN_MS = 1000;      // 1 second cooldown between reps
 
 const toDegrees = (radians: number) => (radians * 180) / Math.PI;
-
-const getPitchDegrees = (acc: { x?: number; y?: number; z?: number }) => {
-  const x = acc.x ?? 0;
-  const y = acc.y ?? 0;
-  const z = acc.z ?? 0;
-  const pitch = Math.atan2(-x, Math.sqrt(y * y + z * z));
-  return toDegrees(pitch);
-};
 
 export default function SquatTrackerScreen() {
   const router = useRouter();
@@ -42,14 +31,11 @@ export default function SquatTrackerScreen() {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [repCount, setRepCount] = useState(0);
-  const [pitch, setPitch] = useState(0);
-  const [phase, setPhase] = useState<RepPhase>('ready');
-  const [baselinePitch, setBaselinePitch] = useState<number | null>(null);
+  const [beta, setBeta] = useState(0);
+  const [verticalAccel, setVerticalAccel] = useState(0);
   const [rewardMessage, setRewardMessage] = useState('');
 
-  const baselineRef = useRef<number | null>(null);
-  const phaseRef = useRef<RepPhase>('ready');
-  const lastRepAtRef = useRef(0);
+  const lastRepTimeRef = useRef(0);
   const rewardHandledRef = useRef(false);
 
   useEffect(() => {
@@ -65,34 +51,21 @@ export default function SquatTrackerScreen() {
 
     const subscription = DeviceMotion.addListener((data) => {
       const acc = data.accelerationIncludingGravity ?? { x: 0, y: 0, z: 0 };
-      const nextPitch = getPitchDegrees(acc);
-      setPitch(nextPitch);
+      const rotation = data.rotation ?? { beta: 0 };
+      
+      // Beta angle in degrees
+      const nextBeta = toDegrees(rotation.beta ?? 0);
+      setBeta(nextBeta);
 
-      if (baselineRef.current === null) {
-        baselineRef.current = nextPitch;
-        setBaselinePitch(nextPitch);
-        phaseRef.current = 'ready';
-        setPhase('ready');
-        return;
-      }
+      // Vertical acceleration (z-axis)
+      const zAccel = acc.z ?? 0;
+      setVerticalAccel(zAccel);
 
-      const downThreshold = baselineRef.current - DOWN_DELTA_DEG;
-      const upThreshold = baselineRef.current - UP_DELTA_DEG;
-
-      if (phaseRef.current === 'ready' && nextPitch < downThreshold) {
-        phaseRef.current = 'down';
-        setPhase('down');
-        return;
-      }
-
-      if (phaseRef.current === 'down' && nextPitch > upThreshold) {
-        const now = Date.now();
-        if (now - lastRepAtRef.current > MIN_REP_MS) {
-          lastRepAtRef.current = now;
-          phaseRef.current = 'ready';
-          setPhase('ready');
-          setRepCount((current) => current + 1);
-        }
+      // Check if we hit the threshold and cooldown has passed
+      const now = Date.now();
+      if (nextBeta >= BOTTOM_THRESHOLD && now - lastRepTimeRef.current >= COOLDOWN_MS) {
+        lastRepTimeRef.current = now;
+        setRepCount((current) => current + 1);
       }
     });
 
@@ -125,13 +98,10 @@ export default function SquatTrackerScreen() {
 
   const resetSession = () => {
     setRepCount(0);
-    setPitch(0);
-    setPhase('ready');
-    setBaselinePitch(null);
+    setBeta(0);
+    setVerticalAccel(0);
     setRewardMessage('');
-    baselineRef.current = null;
-    phaseRef.current = 'ready';
-    lastRepAtRef.current = 0;
+    lastRepTimeRef.current = 0;
     rewardHandledRef.current = false;
   };
 
@@ -144,16 +114,17 @@ export default function SquatTrackerScreen() {
 
   const progress = targetReps > 0 ? Math.min(repCount / targetReps, 1) : 0;
   const goalReached = targetReps > 0 && repCount >= targetReps;
+  
   const statusText =
     isAvailable === false
       ? 'Sensors unavailable on this device.'
       : isAvailable === null
         ? 'Checking sensor availability...'
         : !isTracking
-          ? 'Tap start and stand tall to calibrate.'
-          : phase === 'down'
-            ? 'Drive up to finish the rep.'
-            : 'Drop into your squat.';
+          ? 'Tap start and begin squatting.'
+          : goalReached
+            ? rewardMessage || 'Goal reached! Take a breather.'
+            : 'Squat down to at least -20° beta.';
 
   return (
     <ParallaxScrollView
@@ -179,7 +150,7 @@ export default function SquatTrackerScreen() {
             Rep tracker
           </ThemedText>
           <ThemedText style={styles.statsSubtitle} lightColor="#2E5066" darkColor="#2E5066">
-            Rule-based tracking using device motion.
+            Simple threshold tracking using beta angle.
           </ThemedText>
           <View style={styles.metricRow}>
             <View>
@@ -200,10 +171,10 @@ export default function SquatTrackerScreen() {
             </View>
             <View>
               <ThemedText style={styles.metricLabel} lightColor="#2E5066" darkColor="#2E5066">
-                Phase
+                Status
               </ThemedText>
               <ThemedText style={styles.metricValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
-                {phase === 'down' ? 'Down' : 'Up'}
+                {beta >= BOTTOM_THRESHOLD ? '✓' : '—'}
               </ThemedText>
             </View>
           </View>
@@ -211,7 +182,7 @@ export default function SquatTrackerScreen() {
             <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
           </View>
           <ThemedText style={styles.statusText} lightColor="#2E5066" darkColor="#2E5066">
-            {goalReached ? rewardMessage || 'Goal reached! Take a breather.' : statusText}
+            {statusText}
           </ThemedText>
           <View style={styles.actionRow}>
             <Pressable
@@ -235,18 +206,26 @@ export default function SquatTrackerScreen() {
           </ThemedText>
           <View style={styles.dataRow}>
             <ThemedText style={styles.dataLabel} lightColor="#2E5066" darkColor="#2E5066">
-              Pitch
+              Beta
             </ThemedText>
             <ThemedText style={styles.dataValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
-              {pitch.toFixed(1)}°
+              {beta.toFixed(1)}°
             </ThemedText>
           </View>
           <View style={styles.dataRow}>
             <ThemedText style={styles.dataLabel} lightColor="#2E5066" darkColor="#2E5066">
-              Baseline
+              Threshold
             </ThemedText>
             <ThemedText style={styles.dataValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
-              {baselinePitch === null ? '--' : `${baselinePitch.toFixed(1)}°`}
+              {BOTTOM_THRESHOLD}°
+            </ThemedText>
+          </View>
+          <View style={styles.dataRow}>
+            <ThemedText style={styles.dataLabel} lightColor="#2E5066" darkColor="#2E5066">
+              V. Accel
+            </ThemedText>
+            <ThemedText style={styles.dataValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
+              {verticalAccel.toFixed(2)} m/s²
             </ThemedText>
           </View>
         </ThemedView>
