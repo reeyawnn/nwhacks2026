@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -13,6 +14,8 @@ const ACTIVITY_LOG = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
@@ -42,9 +45,9 @@ export default function HomeScreen() {
           <ThemedText style={styles.actionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
             Start a work session to stay on track and protect your reward time.
           </ThemedText>
-          <Pressable style={styles.workButton}>
+          <Pressable style={styles.workButton} onPress={() => router.push('/timer')}>
             <ThemedText style={styles.workButtonText} lightColor="#1C3A2A" darkColor="#1C3A2A">
-              Start work session
+              Start focus session
             </ThemedText>
           </Pressable>
         </ThemedView>

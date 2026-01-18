@@ -2,6 +2,10 @@ import { DeviceMotion } from 'expo-sensors';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+
 type MotionSnapshot = {
   acceleration: { x: number; y: number; z: number };
   rotation: { alpha: number; beta: number; gamma: number };
@@ -158,72 +162,105 @@ export default function TimerScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>📱 Set-Down Timer</Text>
-      <Text style={styles.subtitle}>Hands-free timer that starts once your phone is placed down.</Text>
-
-      <View style={styles.timerCard}>
-        <Text style={styles.timerLabel}>Countdown</Text>
-        <Text style={styles.timerValue}>{formattedTime}</Text>
-        <Text style={styles.statusText}>{status}</Text>
-        <View style={styles.pickerRow}>
-          <TimeStepper label="Minutes" value={minutes} setter={setMinutes} disabled={isMonitoring} />
-          <TimeStepper label="Seconds" value={seconds} setter={setSeconds} disabled={isMonitoring} />
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
+      headerImage={
+        <View style={styles.header}>
+          <View style={styles.cloudOne} />
+          <View style={styles.cloudTwo} />
+          <View style={styles.sunBubble} />
+          <View style={styles.headerBadge}>
+            <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              Focus Mode
+            </ThemedText>
+          </View>
+          <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
+            Stay locked in
+          </ThemedText>
+          <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Phone down = countdown on. Lift it up to pause the sprint.
+          </ThemedText>
         </View>
-        <Text style={styles.sessionHint}>
-          Adjust minutes and seconds (0-59 each) before starting. Countdown only runs while the phone rests.
-        </Text>
-        {isDurationZero && !isMonitoring && (
-          <Text style={styles.warningText}>Duration must be at least 1 second.</Text>
+      }>
+      <ThemedView style={styles.body}>
+        <ThemedView style={styles.sessionCard}>
+          <ThemedText style={styles.sessionTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            Current focus sprint
+          </ThemedText>
+          <ThemedText style={styles.sessionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Countdown only runs while your device stays put.
+          </ThemedText>
+          <View style={styles.timerDisplay}>
+            <Text style={styles.timerValue}>{formattedTime}</Text>
+            <Text style={styles.statusText}>{status}</Text>
+          </View>
+          <View style={styles.pickerRow}>
+            <TimeStepper label="Minutes" value={minutes} setter={setMinutes} disabled={isMonitoring} />
+            <TimeStepper label="Seconds" value={seconds} setter={setSeconds} disabled={isMonitoring} />
+          </View>
+          <Text style={styles.sessionHint}>
+            Adjust minutes and seconds (0-59 each) before starting. Countdown only runs while the phone rests.
+          </Text>
+          {isDurationZero && !isMonitoring && (
+            <Text style={styles.warningText}>Duration must be at least 1 second.</Text>
+          )}
+          <TouchableOpacity
+            style={[
+              styles.button,
+              isMonitoring && styles.buttonCancel,
+              !isMonitoring && isDurationZero && styles.buttonDisabled,
+            ]}
+            disabled={!isMonitoring && isDurationZero}
+            onPress={primaryAction}
+            activeOpacity={0.9}>
+            <Text style={[styles.buttonText, !isMonitoring && isDurationZero && styles.buttonTextDisabled]}>
+              {isMonitoring ? 'Cancel session' : 'Start focus session'}
+            </Text>
+          </TouchableOpacity>
+        </ThemedView>
+
+        {baseline && (
+          <ThemedView style={styles.snapshotCard}>
+            <ThemedText style={styles.snapshotTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+              Phone resting since {baseline.capturedAt}
+            </ThemedText>
+            <View style={styles.snapshotRow}>
+              <ThemedText style={styles.snapshotLabel} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                Accel (x/y/z)
+              </ThemedText>
+              <Text style={styles.snapshotValue}>
+                {baseline.acceleration.x.toFixed(2)} / {baseline.acceleration.y.toFixed(2)} /{' '}
+                {baseline.acceleration.z.toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.snapshotRow}>
+              <ThemedText style={styles.snapshotLabel} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                Rotation (α/β/γ)
+              </ThemedText>
+              <Text style={styles.snapshotValue}>
+                {toDegrees(baseline.rotation.alpha).toFixed(1)}° / {toDegrees(baseline.rotation.beta).toFixed(1)}° /{' '}
+                {toDegrees(baseline.rotation.gamma).toFixed(1)}°
+              </Text>
+            </View>
+          </ThemedView>
         )}
-      </View>
 
-      <TouchableOpacity
-        style={[
-          styles.button,
-          isMonitoring && styles.buttonCancel,
-          !isMonitoring && isDurationZero && styles.buttonDisabled,
-        ]}
-        disabled={!isMonitoring && isDurationZero}
-        onPress={primaryAction}
-        activeOpacity={0.9}>
-        <Text style={[styles.buttonText, !isMonitoring && isDurationZero && styles.buttonTextDisabled]}>
-          {isMonitoring ? 'Cancel' : 'Start Timer'}
-        </Text>
-      </TouchableOpacity>
-
-      {baseline && (
-        <View style={styles.snapshotCard}>
-          <Text style={styles.snapshotTitle}>Position captured at {baseline.capturedAt}</Text>
-          <View style={styles.snapshotRow}>
-            <Text style={styles.snapshotLabel}>Accel (x/y/z):</Text>
-            <Text style={styles.snapshotValue}>
-              {baseline.acceleration.x.toFixed(2)} / {baseline.acceleration.y.toFixed(2)} /{' '}
-              {baseline.acceleration.z.toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.snapshotRow}>
-            <Text style={styles.snapshotLabel}>Rotation (α/β/γ):</Text>
-            <Text style={styles.snapshotValue}>
-              {toDegrees(baseline.rotation.alpha).toFixed(1)}° /{' '}
-              {toDegrees(baseline.rotation.beta).toFixed(1)}° /{' '}
-              {toDegrees(baseline.rotation.gamma).toFixed(1)}°
-            </Text>
-          </View>
-        </View>
-      )}
-
-      <View style={styles.helperCard}>
-        <Text style={styles.helperTitle}>How it works</Text>
-        <Text style={styles.helperText}>1. Tap start and gently place your phone on a surface.</Text>
-        <Text style={styles.helperText}>
-          2. Once the sensors read a steady position for ~1s the timer begins.
-        </Text>
-        <Text style={styles.helperText}>
-          3. Lifting or moving the phone stops the timer and locks in the duration.
-        </Text>
-      </View>
-    </View>
+        <ThemedView style={styles.helperCard}>
+          <ThemedText style={styles.helperTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            How focus mode works
+          </ThemedText>
+          <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            • Pick a session duration using the controls above.
+          </ThemedText>
+          <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            • Set your phone down to trigger the countdown.
+          </ThemedText>
+          <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            • Lifting the phone pauses progress until you return it.
+          </ThemedText>
+        </ThemedView>
+      </ThemedView>
+    </ParallaxScrollView>
   );
 }
 
@@ -280,71 +317,125 @@ const formatDuration = (ms: number) => {
 const toDegrees = (value: number) => (value ?? 0) * (180 / Math.PI);
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
     flex: 1,
-    backgroundColor: '#050505',
-    paddingHorizontal: 24,
-    paddingTop: 80,
-    gap: 20,
+    paddingHorizontal: 28,
+    paddingTop: 56,
+    paddingBottom: 40,
+    justifyContent: 'flex-end',
   },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
+  cloudOne: {
+    position: 'absolute',
+    top: 32,
+    left: 24,
+    width: 120,
+    height: 46,
+    borderRadius: 40,
+    backgroundColor: '#FFF7D8',
+    opacity: 0.85,
   },
-  subtitle: {
+  cloudTwo: {
+    position: 'absolute',
+    top: 22,
+    right: 30,
+    width: 90,
+    height: 38,
+    borderRadius: 40,
+    backgroundColor: '#FFF1BF',
+    opacity: 0.9,
+  },
+  sunBubble: {
+    position: 'absolute',
+    top: 40,
+    right: -20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#FFC95C',
+    opacity: 0.7,
+  },
+  headerBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#FFF2B3',
+    borderWidth: 2,
+    borderColor: '#E7B75D',
+    marginBottom: 12,
+  },
+  headerBadgeText: {
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    fontFamily: 'Georgia',
+  },
+  headerTime: {
+    fontSize: 32,
+    lineHeight: 40,
+    fontFamily: 'Georgia',
+  },
+  headerSubtitle: {
+    marginTop: 8,
     fontSize: 15,
-    color: '#aaa',
-    textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 21,
+    maxWidth: 280,
   },
-  timerCard: {
-    backgroundColor: '#141414',
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#222',
+  body: {
+    gap: 18,
+  },
+  sessionCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#FFF7E1',
+    borderWidth: 2,
+    borderColor: '#EFCB7B',
+    gap: 14,
+  },
+  sessionTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
+  },
+  sessionSubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  timerDisplay: {
     alignItems: 'center',
     gap: 6,
-  },
-  timerLabel: {
-    color: '#777',
-    fontSize: 14,
-    letterSpacing: 1,
+    paddingVertical: 6,
   },
   timerValue: {
-    color: '#fff',
     fontSize: 54,
-    fontWeight: '600',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
+    color: '#2C1C07',
   },
   statusText: {
-    color: '#8ddcba',
+    color: '#1E3A34',
     textAlign: 'center',
     fontSize: 14,
   },
   pickerRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 18,
   },
   stepper: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#232323',
+    backgroundColor: '#FFFDF5',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#F0D8A4',
     padding: 12,
   },
   stepperDisabled: {
     opacity: 0.5,
   },
   stepperLabel: {
-    color: '#888',
+    color: '#85652F',
     fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     marginBottom: 8,
   },
   stepperControls: {
@@ -353,99 +444,95 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   stepperButton: {
-    backgroundColor: '#171717',
+    backgroundColor: '#FFE9B9',
     borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#2b2b2b',
+    borderWidth: 2,
+    borderColor: '#E4B968',
   },
   stepperButtonText: {
-    color: '#fff',
+    color: '#2C1C07',
     fontSize: 20,
     fontWeight: '600',
   },
   stepperValue: {
-    color: '#f5f5f5',
-    fontSize: 28,
+    color: '#2C1C07',
+    fontSize: 30,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   sessionHint: {
-    color: '#757575',
+    color: '#6E4B1F',
     fontSize: 12,
-    marginTop: 10,
-    textAlign: 'center',
   },
   warningText: {
-    color: '#ffb347',
+    color: '#A65100',
     fontSize: 12,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-  buttonDisabled: {
-    backgroundColor: '#2c2c2c',
-  },
-  buttonTextDisabled: {
-    color: '#6f6f6f',
   },
   button: {
-    backgroundColor: '#35c759',
-    paddingVertical: 18,
-    borderRadius: 14,
+    marginTop: 8,
+    backgroundColor: '#BFE9C7',
+    borderRadius: 18,
+    paddingVertical: 14,
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#7FC08D',
   },
   buttonCancel: {
-    backgroundColor: '#ff4d4f',
+    backgroundColor: '#FFB4A2',
+    borderColor: '#E26B5A',
+  },
+  buttonDisabled: {
+    backgroundColor: '#E3E3E3',
+    borderColor: '#CFCFCF',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    color: '#1C3A2A',
+    fontSize: 16,
+    fontFamily: 'Georgia',
+  },
+  buttonTextDisabled: {
+    color: '#909090',
   },
   snapshotCard: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
     padding: 18,
-    borderWidth: 1,
-    borderColor: '#1f1f1f',
-    gap: 8,
+    borderRadius: 22,
+    backgroundColor: '#FDECD4',
+    borderWidth: 2,
+    borderColor: '#F0C896',
+    gap: 10,
   },
   snapshotTitle: {
-    color: '#eee',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontFamily: 'Georgia',
   },
   snapshotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   snapshotLabel: {
-    color: '#888',
-    fontSize: 14,
+    fontSize: 13,
   },
   snapshotValue: {
-    color: '#fff',
-    fontSize: 14,
+    color: '#2C1C07',
+    fontSize: 13,
     fontFamily: 'Menlo',
   },
   helperCard: {
-    backgroundColor: '#0d0d0d',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#1c1c1c',
-    marginTop: 'auto',
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#DDE8FF',
+    borderWidth: 2,
+    borderColor: '#A8BCF2',
+    gap: 6,
   },
   helperTitle: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: 16,
+    fontFamily: 'Georgia',
+    marginBottom: 4,
   },
   helperText: {
-    color: '#bbb',
     fontSize: 13,
-    marginBottom: 4,
   },
 });
