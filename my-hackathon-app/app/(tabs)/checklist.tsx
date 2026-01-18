@@ -1,5 +1,6 @@
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -20,6 +21,7 @@ const SAMPLE_APPS = [
 
 export default function ChecklistScreen() {
     const [selectedApps, setSelectedApps] = useState<string[]>([]);
+    const router = useRouter();
 
     const toggleApp = (appId: string) => {
         setSelectedApps((prev) =>
@@ -29,25 +31,27 @@ export default function ChecklistScreen() {
 
     return (
         <ParallaxScrollView
-            headerBackgroundColor={{ light: '#B8E6FF', dark: '#B8E6FF' }}
+            headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
+            backgroundColor="#FFDD7A"
             headerImage={
                 <View style={styles.header}>
                     <View style={styles.cloudOne} />
                     <View style={styles.cloudTwo} />
+                    <View style={styles.sunBubble} />
                     <View style={styles.headerBadge}>
-                        <ThemedText style={styles.headerBadgeText} lightColor="#1F2A44" darkColor="#1F2A44">
+                        <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
                             Screen Time Blocker
                         </ThemedText>
                     </View>
-                    <ThemedText style={styles.headerTitle} lightColor="#0D1B2A" darkColor="#0D1B2A">
+                    <ThemedText style={styles.headerTitle} lightColor="#2C1C07" darkColor="#2C1C07">
                         Which apps drain your time?
                     </ThemedText>
-                    <ThemedText style={styles.headerSubtitle} lightColor="#4B5A82" darkColor="#4B5A82">
+                    <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
                         Select the apps you want to track and limit
                     </ThemedText>
                 </View>
             }>
-            <ThemedView style={styles.body}>
+            <ThemedView style={styles.body} lightColor="#FFDD7A" darkColor="#FFDD7A">
                 <ThemedView style={styles.appGrid}>
                     <FlatList
                         data={SAMPLE_APPS}
@@ -65,8 +69,8 @@ export default function ChecklistScreen() {
                                 <ThemedText style={styles.appIcon}>{item.icon}</ThemedText>
                                 <ThemedText
                                     style={styles.appName}
-                                    lightColor={selectedApps.includes(item.id) ? '#1C3A2A' : '#1F2A44'}
-                                    darkColor={selectedApps.includes(item.id) ? '#1C3A2A' : '#1F2A44'}>
+                                    lightColor={selectedApps.includes(item.id) ? '#1C3A2A' : '#2C1C07'}
+                                    darkColor={selectedApps.includes(item.id) ? '#1C3A2A' : '#2C1C07'}>
                                     {item.name}
                                 </ThemedText>
                                 {selectedApps.includes(item.id) && (
@@ -79,8 +83,8 @@ export default function ChecklistScreen() {
                     />
                 </ThemedView>
 
-                <Pressable style={styles.continueButton}>
-                    <ThemedText style={styles.continueButtonText} lightColor="#FFFDF4" darkColor="#FFFDF4">
+                <Pressable style={styles.continueButton} onPress={() => router.push('/(tabs)')}>
+                    <ThemedText style={styles.continueButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
                         Continue with {selectedApps.length} app{selectedApps.length !== 1 ? 's' : ''}
                     </ThemedText>
                 </Pressable>
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
         width: 120,
         height: 46,
         borderRadius: 40,
-        backgroundColor: '#E8F8FF',
+        backgroundColor: '#FFF7D8',
         opacity: 0.85,
     },
     cloudTwo: {
@@ -114,17 +118,27 @@ const styles = StyleSheet.create({
         width: 90,
         height: 38,
         borderRadius: 40,
-        backgroundColor: '#D4F1FF',
+        backgroundColor: '#FFF1BF',
         opacity: 0.9,
+    },
+    sunBubble: {
+        position: 'absolute',
+        top: 40,
+        right: -20,
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: '#FFC95C',
+        opacity: 0.7,
     },
     headerBadge: {
         alignSelf: 'flex-start',
         paddingHorizontal: 14,
         paddingVertical: 6,
         borderRadius: 999,
-        backgroundColor: '#C8E6FF',
+        backgroundColor: '#FFF2B3',
         borderWidth: 2,
-        borderColor: '#7DB8D4',
+        borderColor: '#E7B75D',
         marginBottom: 12,
     },
     headerBadgeText: {
@@ -151,9 +165,9 @@ const styles = StyleSheet.create({
     appGrid: {
         padding: 20,
         borderRadius: 26,
-        backgroundColor: '#E8F5FF',
+        backgroundColor: '#FFF7E1',
         borderWidth: 2,
-        borderColor: '#9ECDE8',
+        borderColor: '#EFCB7B',
     },
     gridRow: {
         gap: 12,
@@ -164,9 +178,9 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
         paddingHorizontal: 16,
         borderRadius: 20,
-        backgroundColor: '#F5FBFF',
+        backgroundColor: '#FFFDF4',
         borderWidth: 2,
-        borderColor: '#B8D9EE',
+        borderColor: '#F1D79E',
         alignItems: 'center',
         gap: 8,
     },
@@ -199,13 +213,13 @@ const styles = StyleSheet.create({
     },
     continueButton: {
         marginHorizontal: 20,
-        backgroundColor: '#4A90E2',
+        backgroundColor: '#FFD36E',
         borderRadius: 18,
         paddingVertical: 16,
         paddingHorizontal: 20,
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: '#2E5AA8',
+        borderColor: '#E8AD3F',
     },
     continueButtonText: {
         fontSize: 16,

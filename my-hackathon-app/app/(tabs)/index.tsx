@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -24,6 +25,11 @@ export default function HomeScreen() {
           <View style={styles.cloudOne} />
           <View style={styles.cloudTwo} />
           <View style={styles.sunBubble} />
+          <Link href="/(tabs)/settings" asChild>
+            <Pressable style={styles.settingsButton}>
+              <Ionicons name="settings" size={18} color="#6E4B1F" />
+            </Pressable>
+          </Link>
           <View style={styles.headerBadge}>
             <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
               Reward Time
@@ -139,6 +145,19 @@ const styles = StyleSheet.create({
     borderRadius: 70,
     backgroundColor: '#FFC95C',
     opacity: 0.7,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 40,
+    right: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF2B3',
+    borderWidth: 2,
+    borderColor: '#E7B75D',
   },
   headerBadge: {
     alignSelf: 'flex-start',
