@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         letterSpacing: 0.6,
         textTransform: 'uppercase',
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
     },
     headerTitle: {
         fontSize: 32,
         lineHeight: 36,
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
         marginBottom: 8,
     },
     headerSubtitle: {
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     },
     appName: {
         fontSize: 13,
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
         textAlign: 'center',
     },
     checkmark: {
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     },
     continueButtonText: {
         fontSize: 16,
-        fontFamily: 'Georgia',
+        fontFamily: 'ZalandoSansExpanded',
         fontWeight: '600',
     },
 });
