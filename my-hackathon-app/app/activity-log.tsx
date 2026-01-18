@@ -1,89 +1,56 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useRouter, Link } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const ACTIVITY_LOG = [
   { id: '1', label: 'Jump rope', minutes: 12, time: '9:10 AM' },
   { id: '2', label: 'Push-ups', minutes: 8, time: '11:40 AM' },
   { id: '3', label: 'Yoga flow', minutes: 20, time: '2:05 PM' },
   { id: '4', label: 'Dance break', minutes: 10, time: '4:25 PM' },
+  { id: '5', label: 'Plank holds', minutes: 6, time: '6:10 PM' },
 ];
 
-export default function HomeScreen() {
+export default function ActivityLogScreen() {
   const router = useRouter();
-
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
+      backgroundColor="#FFDD7A"
       headerImage={
         <View style={styles.header}>
           <View style={styles.cloudOne} />
           <View style={styles.cloudTwo} />
           <View style={styles.sunBubble} />
-          <Link href="/(tabs)/settings" asChild>
-            <Pressable style={styles.settingsButton}>
-              <Ionicons name="settings" size={18} color="#6E4B1F" />
-            </Pressable>
-          </Link>
+          <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/(tabs)')}>
+            <Ionicons name="home" size={18} color="#6E4B1F" />
+          </TouchableOpacity>
           <View style={styles.headerBadge}>
             <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
-              Reward Time
+              Activity Log
             </ThemedText>
           </View>
-          <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
-            2h 20m
+          <ThemedText style={styles.headerTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            Every rep counts
           </ThemedText>
           <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            Keep moving to unlock more screen time!
+            Track how workouts convert into screen time rewards.
           </ThemedText>
         </View>
       }>
-      <ThemedView style={styles.body}>
-        <ThemedView style={styles.actionCard}>
-          <ThemedText style={styles.actionTitle} lightColor="#2C1C07" darkColor="#2C1C07">
-            Power up a focus sprint
-          </ThemedText>
-          <ThemedText style={styles.actionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            Start a work session to stay on track and protect your reward time.
-          </ThemedText>
-          <Pressable style={styles.workButton} onPress={() => router.push('/timer')}>
-            <ThemedText style={styles.workButtonText} lightColor="#1C3A2A" darkColor="#1C3A2A">
-              Start focus session
-            </ThemedText>
-          </Pressable>
-        </ThemedView>
-
-        <ThemedView style={styles.earnCard}>
-          <View style={styles.earnHeader}>
-            <ThemedText style={styles.earnTitle} lightColor="#1F2A44" darkColor="#1F2A44">
-              Earn more time
-            </ThemedText>
-            <ThemedText style={styles.earnSubtitle} lightColor="#4B5A82" darkColor="#4B5A82">
-              Log quick exercises for instant bonus minutes.
-            </ThemedText>
-          </View>
-          <Link href="/earn" asChild>
-            <Pressable style={styles.earnButton}>
-              <ThemedText style={styles.earnButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
-                Earn time now
-              </ThemedText>
-            </Pressable>
-          </Link>
-        </ThemedView>
-
+      <ThemedView style={styles.body} lightColor="#FFDD7A" darkColor="#FFDD7A">
         <ThemedView style={styles.logCard}>
           <ThemedText style={styles.logTitle} lightColor="#2C1C07" darkColor="#2C1C07">
-            Activity log
+            Recent activity
           </ThemedText>
           <ThemedText style={styles.logSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            Every movement converts to screen time.
+            Keep adding exercise bursts to grow your reward bank.
           </ThemedText>
           <View style={styles.logList}>
-            {ACTIVITY_LOG.slice(0, 3).map((item) => (
+            {ACTIVITY_LOG.map((item) => (
               <View key={item.id} style={styles.logRow}>
                 <View>
                   <ThemedText style={styles.logItemLabel} lightColor="#2C1C07" darkColor="#2C1C07">
@@ -101,13 +68,6 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
-          <Link href="/activity-log" asChild>
-            <Pressable style={styles.logButton}>
-              <ThemedText style={styles.logButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
-                View full log
-              </ThemedText>
-            </Pressable>
-          </Link>
         </ThemedView>
       </ThemedView>
     </ParallaxScrollView>
@@ -152,7 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFC95C',
     opacity: 0.7,
   },
-  settingsButton: {
+  homeButton: {
     position: 'absolute',
     top: 40,
     right: 24,
@@ -179,82 +139,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    fontFamily: 'ZalandoSansExpanded',
+    fontFamily: 'Georgia',
   },
-  headerTime: {
-    fontSize: 38,
-    lineHeight: 42,
-    fontFamily: 'ZalandoSansExpanded',
+  headerTitle: {
+    fontSize: 32,
+    lineHeight: 36,
+    fontFamily: 'Georgia',
+    marginBottom: 8,
   },
   headerSubtitle: {
-    marginTop: 8,
     fontSize: 15,
     lineHeight: 21,
-    maxWidth: 260,
+    maxWidth: 280,
   },
   body: {
     gap: 18,
-  },
-  actionCard: {
-    padding: 20,
-    borderRadius: 26,
-    backgroundColor: '#FFF7E1',
-    borderWidth: 2,
-    borderColor: '#EFCB7B',
-    gap: 12,
-  },
-  actionTitle: {
-    fontSize: 20,
-    fontFamily: 'ZalandoSansExpanded',
-  },
-  actionSubtitle: {
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  workButton: {
-    backgroundColor: '#BFE9C7',
-    borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#7FC08D',
-  },
-  workButtonText: {
-    fontSize: 15,
-    fontFamily: 'ZalandoSansExpanded',
-  },
-  earnCard: {
-    padding: 20,
-    borderRadius: 26,
-    backgroundColor: '#DDE8FF',
-    borderWidth: 2,
-    borderColor: '#A8B7E8',
-    gap: 14,
-  },
-  earnHeader: {
-    gap: 6,
-  },
-  earnTitle: {
-    fontSize: 20,
-    fontFamily: 'ZalandoSansExpanded',
-  },
-  earnSubtitle: {
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  earnButton: {
-    backgroundColor: '#FFD36E',
-    borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E8AD3F',
-  },
-  earnButtonText: {
-    fontSize: 15,
-    fontFamily: 'ZalandoSansExpanded',
   },
   logCard: {
     padding: 20,
@@ -265,7 +164,7 @@ const styles = StyleSheet.create({
   },
   logTitle: {
     fontSize: 20,
-    fontFamily: 'ZalandoSansExpanded',
+    fontFamily: 'Georgia',
     marginBottom: 6,
   },
   logSubtitle: {
@@ -288,7 +187,7 @@ const styles = StyleSheet.create({
   },
   logItemLabel: {
     fontSize: 15,
-    fontFamily: 'ZalandoSansExpanded',
+    fontFamily: 'Georgia',
   },
   logItemTime: {
     fontSize: 12,
@@ -304,19 +203,6 @@ const styles = StyleSheet.create({
   },
   logPillText: {
     fontSize: 12,
-    fontFamily: 'ZalandoSansExpanded',
-  },
-  logButton: {
-    marginTop: 14,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: '#FFD36E',
-    borderWidth: 2,
-    borderColor: '#E8AD3F',
-  },
-  logButtonText: {
-    fontSize: 14,
     fontFamily: 'Georgia',
   },
 });

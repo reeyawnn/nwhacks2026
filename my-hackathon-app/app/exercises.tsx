@@ -57,7 +57,6 @@ export default function ExercisesScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
-      backgroundColor="#FFDD7A"
       headerImage={
         <View style={styles.header}>
           <View style={styles.ribbon} />

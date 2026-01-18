@@ -276,7 +276,7 @@ export default function TimerScreen() {
 
   const navigateHome = () => {
     stopHaptics();
-    router.push('/(tabs)');
+    router.replace('/(tabs)');
   };
 
   return (
