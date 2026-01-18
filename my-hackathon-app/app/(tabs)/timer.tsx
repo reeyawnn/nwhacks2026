@@ -518,12 +518,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   headerTime: {
     fontSize: 32,
     lineHeight: 40,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   headerSubtitle: {
     marginTop: 8,
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   },
   sessionTitle: {
     fontSize: 20,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   sessionSubtitle: {
     fontSize: 13,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#1C3A2A',
     fontSize: 16,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   buttonTextDisabled: {
     color: '#909090',
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   },
   snapshotTitle: {
     fontSize: 16,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
   snapshotRow: {
     flexDirection: 'row',
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
   },
   helperTitle: {
     fontSize: 16,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
     marginBottom: 4,
   },
   helperText: {
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   },
   overlayTitle: {
     fontSize: 22,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
     color: '#2C1C07',
   },
   overlayMessage: {
@@ -724,6 +724,6 @@ const styles = StyleSheet.create({
   overlayButtonText: {
     color: '#1C3A2A',
     fontSize: 15,
-    fontFamily: 'Georgia',
+    fontFamily: 'ZalandoSansExpanded',
   },
 });
