@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, View, Vibration } from 'react-native';
 import { DeviceMotion } from 'expo-sensors';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { addRewardMinutes } from '@/store/reward-store';
 
+const TOP_THRESHOLD = 0;
 const BOTTOM_THRESHOLD = -20;  // Beta angle must reach -20° or higher (closer to 0)
 const COOLDOWN_MS = 1000;      // 1 second cooldown between reps
+const REP_BEEP_DATA_URI =
+  'data:audio/wav;base64,UklGRqQHAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YYAHAAAAAKIgSjLdLNgSLvDG1DXN9NzK/BcelzFTLswVRfOV1ujMrtqW+W4bsTCaL6oYafaO2M7Mjthp9qoYmi+xMG4blvmu2ujMldZF88wVUy6XMRceyvz03DXNxtQu8NgS3SxKMqIgAABe37bNI9Mo7dIPOivLMgwjNgPp4WnOrdE06rsMaykYM1IlagaS5E/PZtBW55cJcicyM3InlwlW52bQT8+S5GoGUiUYM2spuww06q3Rac7p4TYDDCPLMjor0g8o7SPTts1e3wAAoiBKMt0s2BIu8MbUNc303Mr8Fx6XMVMuzBVF85XW6Myu2pb5bhuxMJovqhhp9o7YzsyO2Gn2qhiaL7EwbhuW+a7a6MyV1kXzzBVTLpcxFx7K/PTcNc3G1C7w2BLdLEoyoiAAAF7fts0j0yjt0g86K8syDCM2A+nhac6t0TTquwxrKRgzUiVqBpLkT89m0FbnlwlyJzIzcieXCVbnZtBPz5LkagZSJRgzaym7DDTqrdFpzunhNgMMI8syOivSDyjtI9O2zV7fAACiIEoy3SzYEi7wxtQ1zfTcyvwXHpcxUy7MFUXzldbozK7alvluG7Ewmi+qGGn2jtjOzI7YafaqGJovsTBuG5b5rtrozJXWRfPMFVMulzEXHsr89Nw1zcbULvDYEt0sSjKiIAAAXt+2zSPTKO3SDzoryzIMIzYD6eFpzq3RNOq7DGspGDNSJWoGkuRPz2bQVueXCXInMjNyJ5cJVudm0E/PkuRqBlIlGDNrKbsMNOqt0WnO6eE2AwwjyzI6K9IPKO0j07bNXt8AAKIgSjLdLNgSLvDG1DXN9NzK/BcelzFTLswVRfOV1ujMrtqW+W4bsTCaL6oYafaO2M7Mjthp9qoYmi+xMG4blvmu2ujMldZF88wVUy6XMRceyvz03DXNxtQu8NgS3SxKMqIgAABe37bNI9Mo7dIPOivLMgwjNgPp4WnOrdE06rsMaykYM1IlagaS5E/PZtBW55cJcicyM3InlwlW52bQT8+S5GoGUiUYM2spuww06q3Rac7p4TYDDCPLMjor0g8o7SPTts1e3wAAoiBKMt0s2BIu8MbUNc303Mr8Fx6XMVMuzBVF85XW6Myu2pb5bhuxMJovqhhp9o7YzsyO2Gn2qhiaL7EwbhuW+a7a6MyV1kXzzBVTLpcxFx7K/PTcNc3G1C7w2BLdLEoyoiAAAF7fts0j0yjt0g86K8syDCM2A+nhac6t0TTquwxrKRgzUiVqBpLkT89m0FbnlwlyJzIzcieXCVbnZtBPz5LkagZSJRgzaym7DDTqrdFpzunhNgMMI8syOivSDyjtI9O2zV7fAACiIEoy3SzYEi7wxtQ1zfTcyvwXHpcxUy7MFUXzldbozK7alvluG7Ewmi+qGGn2jtjOzI7YafaqGJovsTBuG5b5rtrozJXWRfPMFVMulzEXHsr89Nw1zcbULvDYEt0sSjKiIAAAXt+2zSPTKO3SDzoryzIMIzYD6eFpzq3RNOq7DGspGDNSJWoGkuRPz2bQVueXCXInMjNyJ5cJVudm0E/PkuRqBlIlGDNrKbsMNOqt0WnO6eE2AwwjyzI6K9IPKO0j07bNXt8AAKIgSjLdLNgSLvDG1DXN9NzK/BcelzFTLswVRfOV1ujMrtqW+W4bsTCaL6oYafaO2M7Mjthp9qoYmi+xMG4blvmu2ujMldZF88wVUy6XMRceyvz03DXNxtQu8NgS3SxKMqIgAABe37bNI9Mo7dIPOivLMgwjNgM=';
 
 const toDegrees = (radians: number) => (radians * 180) / Math.PI;
 
@@ -37,9 +42,28 @@ export default function SquatTrackerScreen() {
 
   const lastRepTimeRef = useRef(0);
   const rewardHandledRef = useRef(false);
+  const repSoundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
     DeviceMotion.isAvailableAsync().then(setIsAvailable);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync({ uri: REP_BEEP_DATA_URI });
+      if (!isMounted) {
+        await sound.unloadAsync();
+        return;
+      }
+      repSoundRef.current = sound;
+    };
+    loadSound().catch(() => {});
+    return () => {
+      isMounted = false;
+      repSoundRef.current?.unloadAsync().catch(() => {});
+      repSoundRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -63,9 +87,12 @@ export default function SquatTrackerScreen() {
 
       // Check if we hit the threshold and cooldown has passed
       const now = Date.now();
-      if (nextBeta >= BOTTOM_THRESHOLD && now - lastRepTimeRef.current >= COOLDOWN_MS) {
+      if (nextBeta >= BOTTOM_THRESHOLD && nextBeta <= TOP_THRESHOLD && now - lastRepTimeRef.current >= COOLDOWN_MS) {
         lastRepTimeRef.current = now;
         setRepCount((current) => current + 1);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+        Vibration.vibrate(60);
+        repSoundRef.current?.replayAsync().catch(() => {});
       }
     });
 
@@ -198,35 +225,6 @@ export default function SquatTrackerScreen() {
                 Reset
               </ThemedText>
             </Pressable>
-          </View>
-        </ThemedView>
-        <ThemedView style={styles.dataCard}>
-          <ThemedText style={styles.dataTitle} lightColor="#0E2A3B" darkColor="#0E2A3B">
-            Live signal
-          </ThemedText>
-          <View style={styles.dataRow}>
-            <ThemedText style={styles.dataLabel} lightColor="#2E5066" darkColor="#2E5066">
-              Beta
-            </ThemedText>
-            <ThemedText style={styles.dataValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
-              {beta.toFixed(1)}°
-            </ThemedText>
-          </View>
-          <View style={styles.dataRow}>
-            <ThemedText style={styles.dataLabel} lightColor="#2E5066" darkColor="#2E5066">
-              Threshold
-            </ThemedText>
-            <ThemedText style={styles.dataValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
-              {BOTTOM_THRESHOLD}°
-            </ThemedText>
-          </View>
-          <View style={styles.dataRow}>
-            <ThemedText style={styles.dataLabel} lightColor="#2E5066" darkColor="#2E5066">
-              V. Accel
-            </ThemedText>
-            <ThemedText style={styles.dataValue} lightColor="#0E2A3B" darkColor="#0E2A3B">
-              {verticalAccel.toFixed(2)} m/s²
-            </ThemedText>
           </View>
         </ThemedView>
       </ThemedView>
