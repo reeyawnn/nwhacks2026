@@ -1,8 +1,8 @@
 import { DeviceMotion } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { AppState, AppStateStatus, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -15,6 +15,18 @@ type MotionSnapshot = {
   capturedAt: string;
 };
 
+type CachedTimerState = {
+  minutes: number;
+  seconds: number;
+  remainingMs: number;
+  consumedMs: number;
+  baseline: MotionSnapshot | null;
+  status: string;
+  hasSessionStarted: boolean;
+};
+
+let cachedTimerState: CachedTimerState | null = null;
+
 const STATIONARY_THRESHOLD = 0.12;
 const STATIONARY_DURATION_MS = 1200;
 const MOTION_END_THRESHOLD = 0.7;
@@ -24,6 +36,7 @@ export default function TimerScreen() {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [isPhoneDown, setIsPhoneDown] = useState(false);
   const [status, setStatus] = useState('Tap start to arm the timer.');
+  const [showPauseOverlay, setShowPauseOverlay] = useState(false);
   const [baseline, setBaseline] = useState<MotionSnapshot | null>(null);
   const [minutes, setMinutes] = useState(1);
   const [seconds, setSeconds] = useState(0);
@@ -35,6 +48,8 @@ export default function TimerScreen() {
   const consumedMsRef = useRef(0);
   const hasSessionStartedRef = useRef(false);
   const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const appState = useRef(AppState.currentState);
+  const hasRestoredState = useRef(false);
 
   const formattedTime = formatDuration(remainingMs);
   const isDurationZero = sessionTargetMs === 0;
@@ -50,6 +65,7 @@ export default function TimerScreen() {
     consumedMsRef.current = 0;
     setRemainingMs(sessionTargetMs);
     setStatus('Set the phone down to start the countdown.');
+    setShowPauseOverlay(false);
     stationaryStartRef.current = null;
     timerStartRef.current = null;
     hasSessionStartedRef.current = false;
@@ -59,6 +75,7 @@ export default function TimerScreen() {
     setIsMonitoring(false);
     setIsPhoneDown(false);
     setStatus('Timer cancelled. Tap start to arm again.');
+    setShowPauseOverlay(false);
     if (timerStartRef.current) {
       const now = Date.now();
       const addition = now - timerStartRef.current;
@@ -68,6 +85,7 @@ export default function TimerScreen() {
     }
     stationaryStartRef.current = null;
     hasSessionStartedRef.current = false;
+    cachedTimerState = null;
   }, [sessionTargetMs]);
 
   const pauseTimer = useCallback(() => {
@@ -80,6 +98,7 @@ export default function TimerScreen() {
     }
     setIsPhoneDown(false);
     setStatus('Phone picked up — timer paused. Set it down to resume.');
+    setShowPauseOverlay(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
     stationaryStartRef.current = null;
@@ -96,6 +115,8 @@ export default function TimerScreen() {
     setRemainingMs(0);
     stationaryStartRef.current = null;
     hasSessionStartedRef.current = false;
+    setShowPauseOverlay(false);
+    cachedTimerState = null;
     router.push('/earn');
   }, [router, sessionTargetMs]);
 
@@ -126,6 +147,7 @@ export default function TimerScreen() {
               });
               setIsPhoneDown(true);
               setStatus('Countdown running… keep the phone down.');
+              setShowPauseOverlay(false);
               hasSessionStartedRef.current = true;
             }
           } else if (stationaryStartRef.current) {
@@ -161,17 +183,23 @@ export default function TimerScreen() {
 
   useEffect(() => {
     if (!isMonitoring) {
+      if (cachedTimerState?.hasSessionStarted) {
+        return;
+      }
       setRemainingMs(sessionTargetMs);
       consumedMsRef.current = 0;
     }
   }, [isMonitoring, sessionTargetMs]);
 
-  useEffect(() => {
+  const stopHaptics = useCallback(() => {
     if (hapticIntervalRef.current) {
       clearInterval(hapticIntervalRef.current);
       hapticIntervalRef.current = null;
     }
+  }, []);
 
+  useEffect(() => {
+    stopHaptics();
     if (isMonitoring && !isPhoneDown && hasSessionStartedRef.current) {
       const triggerHaptic = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
@@ -181,13 +209,37 @@ export default function TimerScreen() {
       hapticIntervalRef.current = setInterval(triggerHaptic, 1200);
     }
 
-    return () => {
-      if (hapticIntervalRef.current) {
-        clearInterval(hapticIntervalRef.current);
-        hapticIntervalRef.current = null;
+    return stopHaptics;
+  }, [isMonitoring, isPhoneDown, stopHaptics]);
+
+  useEffect(() => {
+    if (isMonitoring) {
+      cachedTimerState = {
+        minutes,
+        seconds,
+        remainingMs,
+        consumedMs: consumedMsRef.current,
+        baseline,
+        status,
+        hasSessionStarted: hasSessionStartedRef.current,
+      };
+    }
+  }, [baseline, isMonitoring, minutes, remainingMs, seconds, status]);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (appState.current.match(/active/) && nextState.match(/inactive|background/)) {
+        stopHaptics();
+        if (isMonitoring && isPhoneDown) {
+          pauseTimer();
+        }
       }
+      appState.current = nextState;
     };
-  }, [isMonitoring, isPhoneDown]);
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [isMonitoring, isPhoneDown, pauseTimer, stopHaptics]);
 
   const primaryAction = () => {
     if (isMonitoring) {
@@ -197,109 +249,155 @@ export default function TimerScreen() {
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        stopHaptics();
+      };
+    }, [stopHaptics])
+  );
+
+  useEffect(() => {
+    if (hasRestoredState.current) return;
+    if (cachedTimerState?.hasSessionStarted) {
+      setMinutes(cachedTimerState.minutes);
+      setSeconds(cachedTimerState.seconds);
+      setRemainingMs(cachedTimerState.remainingMs);
+      setBaseline(cachedTimerState.baseline);
+      setStatus('Set the phone down to resume your focus session.');
+      setIsMonitoring(true);
+      setIsPhoneDown(false);
+      setShowPauseOverlay(true);
+      consumedMsRef.current = cachedTimerState.consumedMs;
+      hasSessionStartedRef.current = cachedTimerState.hasSessionStarted;
+    }
+    hasRestoredState.current = true;
+  }, []);
+
+  const navigateHome = () => {
+    stopHaptics();
+    router.push('/(tabs)');
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
-      headerImage={
-        <View style={styles.header}>
-          <View style={styles.cloudOne} />
-          <View style={styles.cloudTwo} />
-          <View style={styles.sunBubble} />
-          <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/(tabs)')}>
-            <Ionicons name="home" size={18} color="#6E4B1F" />
-          </TouchableOpacity>
-          <View style={styles.headerBadge}>
-            <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
-              Focus Mode
+    <View style={{ flex: 1 }}>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
+        headerImage={
+          <View style={styles.header}>
+            <View style={styles.cloudOne} />
+            <View style={styles.cloudTwo} />
+            <View style={styles.sunBubble} />
+            <TouchableOpacity style={styles.homeButton} onPress={navigateHome}>
+              <Ionicons name="home" size={18} color="#6E4B1F" />
+            </TouchableOpacity>
+            <View style={styles.headerBadge}>
+              <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                Focus Mode
+              </ThemedText>
+            </View>
+            <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
+              Stay locked in
+            </ThemedText>
+            <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              Phone down = countdown on. Lift it up to pause the sprint.
             </ThemedText>
           </View>
-          <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
-            Stay locked in
-          </ThemedText>
-          <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            Phone down = countdown on. Lift it up to pause the sprint.
-          </ThemedText>
-        </View>
-      }>
-      <ThemedView style={styles.body}>
-        <ThemedView style={styles.sessionCard}>
-          <ThemedText style={styles.sessionTitle} lightColor="#2C1C07" darkColor="#2C1C07">
-            Current focus sprint
-          </ThemedText>
-          <ThemedText style={styles.sessionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            Countdown only runs while your device stays put.
-          </ThemedText>
-          <View style={styles.timerDisplay}>
-            <Text style={styles.timerValue}>{formattedTime}</Text>
-            <Text style={styles.statusText}>{status}</Text>
-          </View>
-          <View style={styles.pickerRow}>
-            <TimeStepper label="Minutes" value={minutes} setter={setMinutes} disabled={isMonitoring} />
-            <TimeStepper label="Seconds" value={seconds} setter={setSeconds} disabled={isMonitoring} />
-          </View>
-          <Text style={styles.sessionHint}>
-            Adjust minutes and seconds (0-59 each) before starting. Countdown only runs while the phone rests.
-          </Text>
-          {isDurationZero && !isMonitoring && (
-            <Text style={styles.warningText}>Duration must be at least 1 second.</Text>
-          )}
-          <TouchableOpacity
-            style={[
-              styles.button,
-              isMonitoring && styles.buttonCancel,
-              !isMonitoring && isDurationZero && styles.buttonDisabled,
-            ]}
-            disabled={!isMonitoring && isDurationZero}
-            onPress={primaryAction}
-            activeOpacity={0.9}>
-            <Text style={[styles.buttonText, !isMonitoring && isDurationZero && styles.buttonTextDisabled]}>
-              {isMonitoring ? 'Cancel session' : 'Start focus session'}
+        }>
+        <ThemedView style={styles.body}>
+          <ThemedView style={styles.sessionCard}>
+            <ThemedText style={styles.sessionTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+              Current focus sprint
+            </ThemedText>
+            <ThemedText style={styles.sessionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              Countdown only runs while your device stays put.
+            </ThemedText>
+            <View style={styles.timerDisplay}>
+              <Text style={styles.timerValue}>{formattedTime}</Text>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <View style={styles.pickerRow}>
+              <TimeStepper label="Minutes" value={minutes} setter={setMinutes} disabled={isMonitoring} />
+              <TimeStepper label="Seconds" value={seconds} setter={setSeconds} disabled={isMonitoring} />
+            </View>
+            <Text style={styles.sessionHint}>
+              Adjust minutes and seconds (0-59 each) before starting. Countdown only runs while the phone rests.
             </Text>
-          </TouchableOpacity>
-        </ThemedView>
-
-        {baseline && (
-          <ThemedView style={styles.snapshotCard}>
-            <ThemedText style={styles.snapshotTitle} lightColor="#2C1C07" darkColor="#2C1C07">
-              Phone resting since {baseline.capturedAt}
-            </ThemedText>
-            <View style={styles.snapshotRow}>
-              <ThemedText style={styles.snapshotLabel} lightColor="#6E4B1F" darkColor="#6E4B1F">
-                Accel (x/y/z)
-              </ThemedText>
-              <Text style={styles.snapshotValue}>
-                {baseline.acceleration.x.toFixed(2)} / {baseline.acceleration.y.toFixed(2)} /{' '}
-                {baseline.acceleration.z.toFixed(2)}
+            {isDurationZero && !isMonitoring && (
+              <Text style={styles.warningText}>Duration must be at least 1 second.</Text>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                isMonitoring && styles.buttonCancel,
+                !isMonitoring && isDurationZero && styles.buttonDisabled,
+              ]}
+              disabled={!isMonitoring && isDurationZero}
+              onPress={primaryAction}
+              activeOpacity={0.9}>
+              <Text style={[styles.buttonText, !isMonitoring && isDurationZero && styles.buttonTextDisabled]}>
+                {isMonitoring ? 'Cancel session' : 'Start focus session'}
               </Text>
-            </View>
-            <View style={styles.snapshotRow}>
-              <ThemedText style={styles.snapshotLabel} lightColor="#6E4B1F" darkColor="#6E4B1F">
-                Rotation (α/β/γ)
-              </ThemedText>
-              <Text style={styles.snapshotValue}>
-                {toDegrees(baseline.rotation.alpha).toFixed(1)}° / {toDegrees(baseline.rotation.beta).toFixed(1)}° /{' '}
-                {toDegrees(baseline.rotation.gamma).toFixed(1)}°
-              </Text>
-            </View>
+            </TouchableOpacity>
           </ThemedView>
-        )}
 
-        <ThemedView style={styles.helperCard}>
-          <ThemedText style={styles.helperTitle} lightColor="#2C1C07" darkColor="#2C1C07">
-            How focus mode works
-          </ThemedText>
-          <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            • Pick a session duration using the controls above.
-          </ThemedText>
-          <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            • Set your phone down to trigger the countdown.
-          </ThemedText>
-          <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
-            • Lifting the phone pauses progress until you return it.
-          </ThemedText>
+          {baseline && (
+            <ThemedView style={styles.snapshotCard}>
+              <ThemedText style={styles.snapshotTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+                Phone resting since {baseline.capturedAt}
+              </ThemedText>
+              <View style={styles.snapshotRow}>
+                <ThemedText style={styles.snapshotLabel} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                  Accel (x/y/z)
+                </ThemedText>
+                <Text style={styles.snapshotValue}>
+                  {baseline.acceleration.x.toFixed(2)} / {baseline.acceleration.y.toFixed(2)} /{' '}
+                  {baseline.acceleration.z.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.snapshotRow}>
+                <ThemedText style={styles.snapshotLabel} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                  Rotation (α/β/γ)
+                </ThemedText>
+                <Text style={styles.snapshotValue}>
+                  {toDegrees(baseline.rotation.alpha).toFixed(1)}° / {toDegrees(baseline.rotation.beta).toFixed(1)}° /{' '}
+                  {toDegrees(baseline.rotation.gamma).toFixed(1)}°
+                </Text>
+              </View>
+            </ThemedView>
+          )}
+
+          <ThemedView style={styles.helperCard}>
+            <ThemedText style={styles.helperTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+              How focus mode works
+            </ThemedText>
+            <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              • Pick a session duration using the controls above.
+            </ThemedText>
+            <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              • Set your phone down to trigger the countdown.
+            </ThemedText>
+            <ThemedText style={styles.helperText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              • Lifting the phone pauses progress until you return it.
+            </ThemedText>
+          </ThemedView>
         </ThemedView>
-      </ThemedView>
-    </ParallaxScrollView>
+      </ParallaxScrollView>
+
+      {showPauseOverlay && (
+        <View style={styles.overlay}>
+          <View style={styles.overlayCard}>
+            <Text style={styles.overlayTitle}>Phone is moving</Text>
+            <Text style={styles.overlayMessage}>
+              Set your device back down to resume this focus sprint or head home to restart later.
+            </Text>
+            <TouchableOpacity style={styles.overlayButton} onPress={navigateHome}>
+              <Text style={styles.overlayButtonText}>Go Home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -586,5 +684,46 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 13,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  overlayCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#FFF7E0',
+    borderRadius: 28,
+    padding: 24,
+    borderWidth: 2,
+    borderColor: '#EBC37D',
+    gap: 12,
+  },
+  overlayTitle: {
+    fontSize: 22,
+    fontFamily: 'Georgia',
+    color: '#2C1C07',
+  },
+  overlayMessage: {
+    fontSize: 15,
+    color: '#6E4B1F',
+    lineHeight: 20,
+  },
+  overlayButton: {
+    marginTop: 8,
+    backgroundColor: '#BFE9C7',
+    borderRadius: 18,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#7FC08D',
+  },
+  overlayButtonText: {
+    color: '#1C3A2A',
+    fontSize: 15,
+    fontFamily: 'Georgia',
   },
 });
