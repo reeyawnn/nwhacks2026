@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Link } from 'expo-router';
 
 const ACTIVITY_LOG = [
   { id: '1', label: 'Jump rope', minutes: 12, time: '9:10 AM' },
@@ -57,11 +58,13 @@ export default function HomeScreen() {
               Log quick exercises for instant bonus minutes.
             </ThemedText>
           </View>
-          <Pressable style={styles.earnButton}>
-            <ThemedText style={styles.earnButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
-              Earn time now
-            </ThemedText>
-          </Pressable>
+          <Link href="/earn" asChild>
+            <Pressable style={styles.earnButton}>
+              <ThemedText style={styles.earnButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
+                Earn time now
+              </ThemedText>
+            </Pressable>
+          </Link>
         </ThemedView>
 
         <ThemedView style={styles.logCard}>
