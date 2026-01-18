@@ -1,98 +1,278 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+
+const ACTIVITY_LOG = [
+  { id: '1', label: 'Jump rope', minutes: 12, time: '9:10 AM' },
+  { id: '2', label: 'Push-ups', minutes: 8, time: '11:40 AM' },
+  { id: '3', label: 'Yoga flow', minutes: 20, time: '2:05 PM' },
+  { id: '4', label: 'Dance break', minutes: 10, time: '4:25 PM' },
+];
 
 export default function HomeScreen() {
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
       headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
+        <View style={styles.header}>
+          <View style={styles.cloudOne} />
+          <View style={styles.cloudTwo} />
+          <View style={styles.sunBubble} />
+          <View style={styles.headerBadge}>
+            <ThemedText style={styles.headerBadgeText} lightColor="#6E4B1F" darkColor="#6E4B1F">
+              Reward Time
+            </ThemedText>
+          </View>
+          <ThemedText style={styles.headerTime} lightColor="#2C1C07" darkColor="#2C1C07">
+            2h 20m
+          </ThemedText>
+          <ThemedText style={styles.headerSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Keep moving to unlock more screen time!
+          </ThemedText>
+        </View>
       }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Nelson</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+      <ThemedView style={styles.body}>
+        <ThemedView style={styles.actionCard}>
+          <ThemedText style={styles.actionTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            Power up a focus sprint
+          </ThemedText>
+          <ThemedText style={styles.actionSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Start a work session to stay on track and protect your reward time.
+          </ThemedText>
+          <Pressable style={styles.workButton}>
+            <ThemedText style={styles.workButtonText} lightColor="#1C3A2A" darkColor="#1C3A2A">
+              Start work session
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+        <ThemedView style={styles.earnCard}>
+          <View style={styles.earnHeader}>
+            <ThemedText style={styles.earnTitle} lightColor="#1F2A44" darkColor="#1F2A44">
+              Earn more time
+            </ThemedText>
+            <ThemedText style={styles.earnSubtitle} lightColor="#4B5A82" darkColor="#4B5A82">
+              Log quick exercises for instant bonus minutes.
+            </ThemedText>
+          </View>
+          <Pressable style={styles.earnButton}>
+            <ThemedText style={styles.earnButtonText} lightColor="#2C1C07" darkColor="#2C1C07">
+              Earn time now
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
+
+        <ThemedView style={styles.logCard}>
+          <ThemedText style={styles.logTitle} lightColor="#2C1C07" darkColor="#2C1C07">
+            Activity log
+          </ThemedText>
+          <ThemedText style={styles.logSubtitle} lightColor="#6E4B1F" darkColor="#6E4B1F">
+            Every movement converts to screen time.
+          </ThemedText>
+          <View style={styles.logList}>
+            {ACTIVITY_LOG.map((item) => (
+              <View key={item.id} style={styles.logRow}>
+                <View>
+                  <ThemedText style={styles.logItemLabel} lightColor="#2C1C07" darkColor="#2C1C07">
+                    {item.label}
+                  </ThemedText>
+                  <ThemedText style={styles.logItemTime} lightColor="#6E4B1F" darkColor="#6E4B1F">
+                    {item.time}
+                  </ThemedText>
+                </View>
+                <View style={styles.logPill}>
+                  <ThemedText style={styles.logPillText} lightColor="#2C1C07" darkColor="#2C1C07">
+                    +{item.minutes} min
+                  </ThemedText>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ThemedView>
       </ThemedView>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  header: {
+    flex: 1,
+    paddingHorizontal: 28,
+    paddingTop: 56,
+    paddingBottom: 40,
+    justifyContent: 'flex-end',
+  },
+  cloudOne: {
+    position: 'absolute',
+    top: 32,
+    left: 24,
+    width: 120,
+    height: 46,
+    borderRadius: 40,
+    backgroundColor: '#FFF7D8',
+    opacity: 0.85,
+  },
+  cloudTwo: {
+    position: 'absolute',
+    top: 22,
+    right: 30,
+    width: 90,
+    height: 38,
+    borderRadius: 40,
+    backgroundColor: '#FFF1BF',
+    opacity: 0.9,
+  },
+  sunBubble: {
+    position: 'absolute',
+    top: 40,
+    right: -20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#FFC95C',
+    opacity: 0.7,
+  },
+  headerBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#FFF2B3',
+    borderWidth: 2,
+    borderColor: '#E7B75D',
+    marginBottom: 12,
+  },
+  headerBadgeText: {
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    fontFamily: 'Georgia',
+  },
+  headerTime: {
+    fontSize: 38,
+    lineHeight: 42,
+    fontFamily: 'Georgia',
+  },
+  headerSubtitle: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 21,
+    maxWidth: 260,
+  },
+  body: {
+    gap: 18,
+  },
+  actionCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#FFF7E1',
+    borderWidth: 2,
+    borderColor: '#EFCB7B',
+    gap: 12,
+  },
+  actionTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
+  },
+  actionSubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  workButton: {
+    backgroundColor: '#BFE9C7',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#7FC08D',
+  },
+  workButtonText: {
+    fontSize: 15,
+    fontFamily: 'Georgia',
+  },
+  earnCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#DDE8FF',
+    borderWidth: 2,
+    borderColor: '#A8B7E8',
+    gap: 14,
+  },
+  earnHeader: {
+    gap: 6,
+  },
+  earnTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
+  },
+  earnSubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  earnButton: {
+    backgroundColor: '#FFD36E',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E8AD3F',
+  },
+  earnButtonText: {
+    fontSize: 15,
+    fontFamily: 'Georgia',
+  },
+  logCard: {
+    padding: 20,
+    borderRadius: 26,
+    backgroundColor: '#FFF7E1',
+    borderWidth: 2,
+    borderColor: '#EFCB7B',
+  },
+  logTitle: {
+    fontSize: 20,
+    fontFamily: 'Georgia',
+    marginBottom: 6,
+  },
+  logSubtitle: {
+    fontSize: 13,
+    marginBottom: 16,
+  },
+  logList: {
+    gap: 12,
+  },
+  logRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    backgroundColor: '#FFFDF4',
+    borderWidth: 2,
+    borderColor: '#F1D79E',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  logItemLabel: {
+    fontSize: 15,
+    fontFamily: 'Georgia',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  logItemTime: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  logPill: {
+    backgroundColor: '#FFD36E',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#E8AD3F',
+  },
+  logPillText: {
+    fontSize: 12,
+    fontFamily: 'Georgia',
   },
 });
