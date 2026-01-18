@@ -54,6 +54,19 @@ export default function ExercisesScreen() {
     }));
   };
 
+  const startTracker = (id: string, name: string) => {
+    const targetReps = repsById[id] ?? 0;
+    router.push({
+      pathname: '/(tabs)/squat_tracker',
+      params: {
+        exerciseId: id,
+        exerciseName: name,
+        targetReps: String(targetReps),
+        source: 'manual',
+      },
+    });
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#FFDD7A', dark: '#FFDD7A' }}
@@ -82,7 +95,10 @@ export default function ExercisesScreen() {
           </ThemedText>
           <View style={styles.exerciseList}>
             {exerciseList.map((exercise) => (
-              <View key={exercise.id} style={styles.exerciseRow}>
+              <Pressable
+                key={exercise.id}
+                style={styles.exerciseRow}
+                onPress={() => startTracker(exercise.id, exercise.name)}>
                 <View>
                   <ThemedText style={styles.exerciseName} lightColor="#2C1C07" darkColor="#2C1C07">
                     {exercise.name}
@@ -115,7 +131,7 @@ export default function ExercisesScreen() {
                     </ThemedText>
                   </Pressable>
                 </View>
-              </View>
+              </Pressable>
             ))}
           </View>
         </ThemedView>
