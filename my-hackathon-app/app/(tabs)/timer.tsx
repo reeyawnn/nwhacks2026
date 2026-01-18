@@ -1,7 +1,7 @@
 import { DeviceMotion } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, AppStateStatus, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, AppStateStatus, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -409,33 +409,61 @@ type TimeStepperProps = {
 };
 
 function TimeStepper({ label, value, setter, disabled }: TimeStepperProps) {
-  const adjust = (delta: number) => {
-    if (disabled) return;
-    setter((prev) => {
-      let next = prev + delta;
-      if (next > 59) next = 0;
-      if (next < 0) next = 59;
-      return next;
-    });
+  const [textValue, setTextValue] = useState(value.toString().padStart(2, '0'));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setTextValue(value.toString().padStart(2, '0'));
+    }
+  }, [isFocused, value]);
+
+  const handleChange = (raw: string) => {
+    if (disabled) {
+      return;
+    }
+    const digits = raw.replace(/[^0-9]/g, '').slice(0, 2);
+    if (!digits) {
+      setTextValue('');
+      setter(0);
+      return;
+    }
+    const parsed = parseInt(digits, 10);
+    if (Number.isNaN(parsed)) {
+      setTextValue('');
+      setter(0);
+      return;
+    }
+    const clamped = Math.min(59, parsed);
+    setTextValue(clamped.toString());
+    setter(clamped);
+  };
+
+  const handleBlur = () => {
+    const parsed = parseInt(textValue, 10);
+    const clamped = Math.min(59, Number.isNaN(parsed) ? 0 : parsed);
+    setter(clamped);
+    setTextValue(clamped.toString().padStart(2, '0'));
+    setIsFocused(false);
   };
 
   return (
     <View style={[styles.stepper, disabled && styles.stepperDisabled]}>
       <Text style={styles.stepperLabel}>{label}</Text>
-      <View style={styles.stepperControls}>
-        <TouchableOpacity
-          style={styles.stepperButton}
-          onPress={() => adjust(-1)}
-          disabled={disabled}>
-          <Text style={styles.stepperButtonText}>-</Text>
-        </TouchableOpacity>
-        <Text style={styles.stepperValue}>{value.toString().padStart(2, '0')}</Text>
-        <TouchableOpacity
-          style={styles.stepperButton}
-          onPress={() => adjust(1)}
-          disabled={disabled}>
-          <Text style={styles.stepperButtonText}>+</Text>
-        </TouchableOpacity>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.stepperInput}
+          value={textValue}
+          onChangeText={handleChange}
+          onBlur={handleBlur}
+          onFocus={() => setIsFocused(true)}
+          editable={!disabled}
+          keyboardType="number-pad"
+          maxLength={2}
+          selectTextOnFocus
+          placeholder="00"
+          placeholderTextColor="#BC9E6A"
+        />
       </View>
     </View>
   );
@@ -560,6 +588,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     color: '#2C1C07',
+    fontFamily: 'ZalandoSansExpanded',
+    letterSpacing: 1,
   },
   statusText: {
     color: '#1E3A34',
@@ -588,29 +618,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 8,
   },
-  stepperControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  stepperButton: {
-    backgroundColor: '#FFE9B9',
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+  inputWrapper: {
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: '#E4B968',
+    backgroundColor: '#FFE9B9',
+    paddingVertical: 4,
   },
-  stepperButtonText: {
+  stepperInput: {
     color: '#2C1C07',
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  stepperValue: {
-    color: '#2C1C07',
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '700',
-    fontVariant: ['tabular-nums'],
+    fontFamily: 'ZalandoSansExpanded',
+    textAlign: 'center',
+    paddingVertical: 6,
   },
   sessionHint: {
     color: '#6E4B1F',
